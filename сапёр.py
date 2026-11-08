@@ -23,6 +23,7 @@ minesweeper_font = pygame.font.SysFont('Arial', 16, 'Bold')
 font_of_game_result = pygame.font.SysFont('Arial', 40)
 font_of_game_level = pygame.font.SysFont('Arial', 40)
 
+SCREEN_WIDTH, SCREEN_HEIGHT = 1250, 900
 color_list = [(0, 0, 0), (0, 0, 191), (0, 127, 0), (255, 0, 0), (127, 127, 0),
               (191, 95, 0), (0, 127, 159), (127, 0, 127), (0, 0, 0)]
 
@@ -202,7 +203,7 @@ timer = pygame.time.Clock()
 
 close_the_game = False
 
-screen = pygame.display.set_mode((1250, 900))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_icon(minesweeper_icon)
 pygame.display.set_caption('Сапёр')
 
@@ -220,18 +221,35 @@ while not close_the_game:
             time_between_explosions = random.choice((0.2, 0.3, 0.5, 0.8, 1.3)) / time_divide_by
             minefield.open_cell(mouse_position=[], coord_list=[], crush_flags_on_the_way=None)
 
+    the_mouse_position = pygame.mouse.get_pos()
+    x, y = the_mouse_position
     for cell_row in minefield.minefield:
         for cell in cell_row:
-            pygame.draw.rect(screen, (127, 127, 127), (cell.x_coord, cell.y_coord, cell.WIDTH - 1, cell.WIDTH - 1))
-
+            rgb_power = (127, 143, 175)[(cell.x_coord <= x <= cell.x_coord + cell.WIDTH - 1) + (cell.y_coord <= y <= cell.y_coord + cell.WIDTH - 1)]
+            pygame.draw.rect(screen, (rgb_power, rgb_power, rgb_power), (cell.x_coord, cell.y_coord, cell.WIDTH - 1, cell.WIDTH - 1))
     minefield.show_cells()
+
+    key = pygame.key.get_pressed()
+    next_x, next_y = x + (key[pygame.K_RIGHT] - key[pygame.K_LEFT]) * Cell.WIDTH, y + (key[pygame.K_DOWN] - key[pygame.K_UP]) * Cell.WIDTH
+    if next_x == x and next_y == y:
+        next_x, next_y = x + (key[pygame.K_d] - key[pygame.K_a]) * Cell.WIDTH, y + (key[pygame.K_s] - key[pygame.K_w]) * Cell.WIDTH
+    if (next_x != x or next_y != y) and (0 < next_x < SCREEN_WIDTH and 0 < next_y < SCREEN_HEIGHT):
+        if mouse_pressed_cnt > FPS // 5 or mouse_pressed_cnt == 0:
+            pygame.mouse.set_pos((next_x, next_y))
+        mouse_pressed_cnt += 1
+    else:
+        mouse_pressed_cnt = 0
+        next_x, next_y = x, y
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             close_the_game = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_button = pygame.mouse.get_pressed()
-            the_mouse_position = pygame.mouse.get_pos()
+        elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_f):
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_button = pygame.mouse.get_pressed()
+            else:
+                key = pygame.key.get_pressed()
+                mouse_button = (any((key[pygame.K_RETURN], key[pygame.K_SPACE])), 'unknown', key[pygame.K_f])
 
             if mouse_button[2]:
                 minefield.set_flag()
