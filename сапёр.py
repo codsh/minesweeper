@@ -225,7 +225,7 @@ while not close_the_game:
     x, y = the_mouse_position
     for cell_row in minefield.minefield:
         for cell in cell_row:
-            rgb_power = (127, 143, 175)[(cell.x_coord <= x <= cell.x_coord + cell.WIDTH - 1) + (cell.y_coord <= y <= cell.y_coord + cell.WIDTH - 1)]
+            rgb_power = (127, 167)[(cell.x_coord <= x <= cell.x_coord + cell.WIDTH - 1) and (cell.y_coord <= y <= cell.y_coord + cell.WIDTH - 1)]
             pygame.draw.rect(screen, (rgb_power, rgb_power, rgb_power), (cell.x_coord, cell.y_coord, cell.WIDTH - 1, cell.WIDTH - 1))
     minefield.show_cells()
 
@@ -240,6 +240,18 @@ while not close_the_game:
     else:
         mouse_pressed_cnt = 0
         next_x, next_y = x, y
+    if any((key[pygame.K_TAB], key[pygame.K_y], key[pygame.K_k], key[pygame.K_g], key[pygame.K_QUOTE])):
+        if tab_pressed_cnt > FPS // 5 or tab_pressed_cnt == 0:
+            if any((y := key[pygame.K_y], k := key[pygame.K_k], g := key[pygame.K_g], quote := key[pygame.K_QUOTE])):
+                level = {y: 'easy', k: 'normal', g: 'hard', quote: 'extreme'}[1]
+            elif not any((key[pygame.K_LSHIFT], key[pygame.K_RSHIFT])):   
+                level = {'extreme': 'easy', 'easy': 'normal', 'normal': 'hard', 'hard': 'extreme'}[level]
+            else:
+                level = {'extreme': 'hard', 'easy': 'extreme', 'normal': 'easy', 'hard': 'normal'}[level]
+            minefield = MineField(*{'extreme': (50, 40, 400), 'easy': (9, 9, 10), 'normal': (16, 16, 40), 'hard': (30, 16, 99)}[level])
+        tab_pressed_cnt += 1
+    else:
+        tab_pressed_cnt = 0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
